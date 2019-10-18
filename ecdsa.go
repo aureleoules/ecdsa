@@ -80,7 +80,7 @@ func (c *Curve) AddPoints(P Point, Q Point) *Point {
 		// ⇒ P and Q are coincident
 
 		/* Compute λ */
-		// λ = (3*P.X + a) / (2*P.Y)
+		// λ = (3*(P.X)² + a) / (2*P.Y)
 		// a = curve.A
 		lambda := c.MultMod(P.X, P.X)
 		lambda = c.MultMod(lambda, big.NewInt(3))

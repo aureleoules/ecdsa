@@ -6,15 +6,6 @@ import (
 	"math/big"
 )
 
-var a = int64(0)
-var b = int64(7)
-var n = new(big.Int)
-
-func init() {
-	n.SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
-
-}
-
 func main() {
 
 	A, _ := new(big.Int).SetString("0000000000000000000000000000000000000000000000000000000000000000", 16)

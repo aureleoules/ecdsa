@@ -6,6 +6,7 @@ import (
 )
 
 // Curve struct
+// y² = x^3 + ax + b
 type Curve struct {
 	A *big.Int
 	B *big.Int
@@ -13,7 +14,7 @@ type Curve struct {
 	N *big.Int
 	H *big.Int
 
-	G *Point
+	G *Point // Generator Point
 }
 
 // Point struct

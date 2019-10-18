@@ -47,31 +47,6 @@ func main() {
 
 }
 
-// F (x) = y
-func F(x *big.Int) *big.Int {
-	y := new(big.Int)
-	y.Add(y, x)
-	y.Exp(y, big.NewInt(3), nil)
-
-	log.Println("y = x^3")
-
-	ax := big.NewInt(a)
-	ax.Mul(ax, x)
-	y.Add(y, ax)
-	log.Println("y = x^3 + ax")
-	y.Add(y, big.NewInt(b))
-	log.Println("y = x^3 + ax + b")
-
-	n.Add(n, big.NewInt(1))
-	n.Div(n, big.NewInt(4))
-	p := new(big.Int)
-	p.SetString("FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F", 16)
-	y.Exp(y, n, p)
-
-	log.Println("y = sqrt(x^3 + ax + b)")
-	return y
-}
-
 func toHexInt(n *big.Int) string {
 	return fmt.Sprintf("%x", n) // or %X or upper case
 }

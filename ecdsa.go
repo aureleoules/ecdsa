@@ -30,7 +30,7 @@ func (p *Point) IsInfinity() bool {
 }
 
 // ScalarMult computes the scalar multiplication of P by n defined by nP = P + P + ... + P where P + P is the point addition of P and P
-func (c *Curve) ScalarMult(n *big.Int, P Point) *Point {
+func (c *Curve) ScalarMult(n *big.Int, P Point) (*Point, bool) {
 	/* Using Montgomery ladder algorithm */
 	var R0 Point
 	R1 := P
@@ -39,19 +39,19 @@ func (c *Curve) ScalarMult(n *big.Int, P Point) *Point {
 
 	for i := len(binary) - 1; i >= 0; i-- {
 		if string(binary[i]) == "1" {
-			R1 = c.AddPoints(R0, R1)
-			R0 = c.AddPoints(R0, R0)
+			R1, _ = c.AddPoints(R0, R1)
+			R0, _ = c.AddPoints(R0, R0)
 		} else {
-			R0 = c.AddPoints(R0, R1)
-			R1 = c.AddPoints(R1, R1)
+			R0, _ = c.AddPoints(R0, R1)
+			R1, _ = c.AddPoints(R1, R1)
 		}
 	}
 
-	return &R0
+	return &R0, c.IsOnCurve(R0)
 }
 
 // AddPoints computes the addition of two points on the curve
-func (c *Curve) AddPoints(P Point, Q Point) Point {
+func (c *Curve) AddPoints(P Point, Q Point) (Point, bool) {
 	R := new(Point)
 
 	/* Checkout https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Point_operations */
@@ -78,19 +78,19 @@ func (c *Curve) AddPoints(P Point, Q Point) Point {
 	} else if P.X.Cmp(Q.X) != 0 {
 		/* Point addition */
 		// Check if P.X != P.Y
-		R = c.PointAddition(P, Q)
+		R, _ = c.PointAddition(P, Q)
 	} else if P.X.Cmp(Q.X) == 0 && P.Y.Cmp(Q.Y) == 0 && P.Y.Cmp(big.NewInt(0)) != 0 {
 		/* Point doubling */
-		R = c.PointDoubling(P, Q)
+		R, _ = c.PointDoubling(P, Q)
 	} else {
 		log.Fatal("Not supported")
 	}
 
-	return *R
+	return *R, c.IsOnCurve(*R)
 }
 
 // PointAddition computes the point addition of P + Q
-func (c *Curve) PointAddition(P, Q Point) *Point {
+func (c *Curve) PointAddition(P, Q Point) (*Point, bool) {
 	R := new(Point)
 
 	/* Point addition */
@@ -114,11 +114,11 @@ func (c *Curve) PointAddition(P, Q Point) *Point {
 	R.Y = c.MultMod(lambda, R.Y)
 	R.Y = c.SubMod(R.Y, P.Y)
 
-	return R
+	return R, c.IsOnCurve(*R)
 }
 
 // PointDoubling computes the point doubling of P + Q
-func (c *Curve) PointDoubling(P, Q Point) *Point {
+func (c *Curve) PointDoubling(P, Q Point) (*Point, bool) {
 	/* Point Doubling */
 	/* The operation is the same as the Point Addition, except lambda is different */
 	// Check if P.X == P.Y and P.Y = Q.Y and P.Y != 0
@@ -149,11 +149,11 @@ func (c *Curve) PointDoubling(P, Q Point) *Point {
 	R.Y = c.MultMod(lambda, R.Y)
 	R.Y = c.SubMod(R.Y, P.Y)
 
-	return R
+	return R, c.IsOnCurve(*R)
 }
 
 // GetY returns y given a x
-func (c *Curve) GetY(x *big.Int) *big.Int {
+func (c *Curve) GetY(x *big.Int) (*big.Int, bool) {
 	// Construct y equation (y^2 = x^3 + ax + b)
 	y := new(big.Int)            // Initialize y
 	y.Add(y, x)                  // Add x
@@ -186,7 +186,7 @@ func (c *Curve) GetY(x *big.Int) *big.Int {
 	res.Div(res, big.NewInt(4))
 	y.Exp(y, res, c.P)
 
-	return y
+	return y, c.IsOnCurve(Point{X: x, Y: y})
 }
 
 // AddMod computes (x + y) mod curve.P

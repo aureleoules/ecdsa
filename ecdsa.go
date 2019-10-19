@@ -31,7 +31,7 @@ func (p *Point) IsInfinity() bool {
 
 // ScalarMult computes the scalar multiplication of P by n defined by nP = P + P + ... + P where P + P is the point addition of P and P
 func (c *Curve) ScalarMult(n *big.Int, P Point) *Point {
-
+	/* Using Montgomery ladder algorithm */
 	var R0 Point
 	R1 := P
 

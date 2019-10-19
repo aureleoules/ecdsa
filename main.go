@@ -23,18 +23,18 @@ func main() {
 		P: P,
 		N: N,
 		H: H,
-		G: &Point{
+		G: Point{
 			X: Gx,
 			Y: Gy,
 		},
 	}
 
-	x := new(big.Int)
-	x.SetString("79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798", 16)
+	pKey := new(big.Int)
+	pKey.SetString("2", 16)
+	X := bitcoinCurve.ScalarMult(pKey, bitcoinCurve.G)
+	log.Println(X)
 
-	y := bitcoinCurve.GetY(x)
-	log.Println(y)
-	log.Println(toHexInt(y))
+	log.Println(toHexInt(X.X), toHexInt(X.Y))
 
 }
 

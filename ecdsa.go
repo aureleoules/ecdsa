@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math/big"
 )
@@ -14,7 +15,7 @@ type Curve struct {
 	N *big.Int
 	H *big.Int
 
-	G *Point // Generator Point
+	G Point // Generator Point
 }
 
 // Point struct
@@ -28,8 +29,29 @@ func (p *Point) IsInfinity() bool {
 	return p.X == nil && p.Y == nil
 }
 
+// ScalarMult computes the scalar multiplication of P by n defined by nP = P + P + ... + P where P + P is the point addition of P and P
+func (c *Curve) ScalarMult(n *big.Int, P Point) *Point {
+
+	var R0 Point
+	R1 := P
+
+	binary := fmt.Sprintf("%b", n)
+
+	for i := len(binary) - 1; i >= 0; i-- {
+		if string(binary[i]) == "1" {
+			R1 = c.AddPoints(R0, R1)
+			R0 = c.AddPoints(R0, R0)
+		} else {
+			R0 = c.AddPoints(R0, R1)
+			R1 = c.AddPoints(R1, R1)
+		}
+	}
+
+	return &R0
+}
+
 // AddPoints computes the addition of two points on the curve
-func (c *Curve) AddPoints(P Point, Q Point) *Point {
+func (c *Curve) AddPoints(P Point, Q Point) Point {
 	R := new(Point)
 
 	/* Checkout https://en.wikipedia.org/wiki/Elliptic_curve_point_multiplication#Point_operations */
@@ -56,53 +78,76 @@ func (c *Curve) AddPoints(P Point, Q Point) *Point {
 	} else if P.X.Cmp(Q.X) != 0 {
 		/* Point addition */
 		// Check if P.X != P.Y
-
-		lambda := c.SubMod(Q.Y, P.Y) // Q.Y - P.Y
-		q := c.SubMod(Q.X, P.X)      // Q.X - P.X
-
-		lambda = c.DivMod(lambda, q) // λ = (Q.Y - P.Y) / (Q.X - P.X)
-
-		/* Compute x */
-		// x = λ² - P.X - Q.X
-		R.X = c.MultMod(lambda, lambda)
-		R.X = c.SubMod(R.X, P.X)
-		R.X = c.SubMod(R.X, Q.X)
-
-		/* Compute y */
-		// y = λ(P.X - R.X) - P.Y
-		R.Y = c.SubMod(P.X, R.X)
-		R.Y = c.MultMod(lambda, R.Y)
-		R.Y = c.SubMod(R.Y, P.Y)
+		R = c.PointAddition(P, Q)
 	} else if P.X.Cmp(Q.X) == 0 && P.Y.Cmp(Q.Y) == 0 && P.Y.Cmp(big.NewInt(0)) != 0 {
 		/* Point doubling */
-		/* The operation is the same as the Point Addition, except lambda is different */
-		// Check if P.X == P.Y and P.Y = Q.Y and P.Y != 0
-		// ⇒ P and Q are coincident
-
-		/* Compute λ */
-		// λ = (3*(P.X)² + a) / (2*P.Y)
-		// a = curve.A
-		lambda := c.MultMod(P.X, P.X)
-		lambda = c.MultMod(lambda, big.NewInt(3))
-		lambda = c.AddMod(lambda, c.A)
-		lambda = c.DivMod(lambda, c.MultMod(P.Y, big.NewInt(2)))
-
-		/* Point addition from here */
-
-		/* Compute x */
-		// x = λ² - P.X - Q.X
-		R.X = c.MultMod(lambda, lambda)
-		R.X = c.SubMod(R.X, P.X)
-		R.X = c.SubMod(R.X, Q.X)
-
-		/* Compute y */
-		// y = λ(P.X - R.X) - P.Y
-		R.Y = c.SubMod(P.X, R.X)
-		R.Y = c.MultMod(lambda, R.Y)
-		R.Y = c.SubMod(R.Y, P.Y)
+		R = c.PointDoubling(P, Q)
 	} else {
 		log.Fatal("Not supported")
 	}
+
+	return *R
+}
+
+// PointAddition computes the point addition of P + Q
+func (c *Curve) PointAddition(P, Q Point) *Point {
+	R := new(Point)
+
+	/* Point addition */
+	// Check if P.X != P.Y
+
+	lambda := c.SubMod(Q.Y, P.Y) // Q.Y - P.Y
+	q := c.SubMod(Q.X, P.X)      // Q.X - P.X
+	q = c.InvMod(q)
+
+	lambda = c.MultMod(lambda, q) // λ = (Q.Y - P.Y) / (Q.X - P.X)
+
+	/* Compute x */
+	// x = λ² - P.X - Q.X
+	R.X = c.MultMod(lambda, lambda)
+	R.X = c.SubMod(R.X, P.X)
+	R.X = c.SubMod(R.X, Q.X)
+
+	/* Compute y */
+	// y = λ(P.X - R.X) - P.Y
+	R.Y = c.SubMod(P.X, R.X)
+	R.Y = c.MultMod(lambda, R.Y)
+	R.Y = c.SubMod(R.Y, P.Y)
+
+	return R
+}
+
+// PointDoubling computes the point doubling of P + Q
+func (c *Curve) PointDoubling(P, Q Point) *Point {
+	/* Point Doubling */
+	/* The operation is the same as the Point Addition, except lambda is different */
+	// Check if P.X == P.Y and P.Y = Q.Y and P.Y != 0
+	// ⇒ P and Q are coincident
+
+	R := new(Point)
+
+	/* Compute λ */
+	// λ = (3*(P.X)² + a) / (2*P.Y)
+	// a = curve.A
+	lambda := c.MultMod(P.X, P.X)
+	lambda = c.MultMod(lambda, big.NewInt(3))
+	lambda = c.AddMod(lambda, c.A)
+
+	lambda = c.MultMod(lambda, c.InvMod(c.MultMod(P.Y, big.NewInt(2))))
+
+	/* Point addition from here */
+
+	/* Compute x */
+	// x = λ² - P.X - Q.X
+	R.X = c.MultMod(lambda, lambda)
+	R.X = c.SubMod(R.X, P.X)
+	R.X = c.SubMod(R.X, Q.X)
+
+	/* Compute y */
+	// y = λ(P.X - R.X) - P.Y
+	R.Y = c.SubMod(P.X, R.X)
+	R.Y = c.MultMod(lambda, R.Y)
+	R.Y = c.SubMod(R.Y, P.Y)
 
 	return R
 }
@@ -173,5 +218,12 @@ func (c *Curve) DivMod(x, y *big.Int) *big.Int {
 	z := new(big.Int)
 	z.Div(x, y)
 	z.Mod(z, c.P)
+	return z
+}
+
+// InvMod computes (1/X) mod curve.P
+func (c *Curve) InvMod(x *big.Int) *big.Int {
+	z := new(big.Int)
+	z.ModInverse(x, c.P)
 	return z
 }

@@ -227,3 +227,20 @@ func (c *Curve) InvMod(x *big.Int) *big.Int {
 	z.ModInverse(x, c.P)
 	return z
 }
+
+// IsOnCurve checks if P is on elliptic curve
+func (c *Curve) IsOnCurve(P Point) bool {
+	if P.IsInfinity() {
+		return false
+	}
+
+	y2 := c.MultMod(P.Y, P.Y) // y²
+
+	eq := c.MultMod(P.X, P.X)              // x^2
+	eq = c.MultMod(eq, P.X)                // x^3
+	eq = c.AddMod(eq, c.MultMod(c.A, P.X)) // x^3 + ax
+	eq = c.AddMod(eq, c.B)                 // x^3 + ax + b
+
+	// y² = x^3 + ax + b
+	return y2.Cmp(eq) == 0
+}

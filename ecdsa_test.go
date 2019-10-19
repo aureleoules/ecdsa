@@ -2,6 +2,7 @@ package ecdsa
 
 import (
 	"github.com/stretchr/testify/assert"
+	"log"
 	"math/big"
 	"testing"
 )
@@ -70,4 +71,18 @@ func TestIsOnCurve(t *testing.T) {
 	p.X = nil
 	p.Y = nil
 	assert.Equal(t, false, secp256k1.IsOnCurve(p))
+}
+
+func TestGetY(t *testing.T) {
+	/* Random public key */
+	var p Point
+	p.X, _ = new(big.Int).SetString("440D851DBCEF5A43A5415B7250C8BEF01D14E1AF93DA31C4F3FFAA2CC3D22B4A", 16)
+	p.Y, _ = new(big.Int).SetString("273A11F6571E968A62B63D0F7D2EFD1A52CDA4E7B65EEA5403E43A87A9DEE018", 16)
+
+	y, _ := secp256k1.GetY(p.X)
+	assert.Equal(t, p.Y, y)
+
+	/* Test with Generator Point */
+	y, _ = secp256k1.GetY(secp256k1.G.X)
+	assert.Equal(t, secp256k1.G.Y, y)
 }

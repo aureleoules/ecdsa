@@ -51,7 +51,7 @@ Where `R` is the negation of the intersection of the curve's tangent at P, and t
 
 ### Point multiplication
 Point multiplication is the repetition of point addition.  
-![Equation](https://math.now.sh?from=nP%20%3D%20%5Csum%5En_%7Bk%3D0%7D%7BP_k%7D%20%3D%20P%20%2B%20P%20%2B%20%5Cdots%20%2B%20P)  
+![Equation](https://math.now.sh?from=nP%20%3D%20%5Csum%5En_%7Bk%3D0%7D%7BP%7D%20%3D%20P%20%2B%20P%20%2B%20%5Cdots%20%2B%20P)  
 
 **Montgomery ladder algorithm**  
 ```go

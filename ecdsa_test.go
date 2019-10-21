@@ -23,12 +23,6 @@ func init() {
 
 func TestIsInfinity(t *testing.T) {
 	p := Point{
-		X: big.NewInt(0),
-		Y: big.NewInt(0),
-	}
-	assert.Equal(t, true, p.IsInfinity())
-
-	p = Point{
 		X: nil,
 		Y: nil,
 	}

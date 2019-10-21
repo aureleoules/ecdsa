@@ -1,7 +1,6 @@
 package ecdsa
 
 import (
-	"fmt"
 	"log"
 	"math/big"
 )
@@ -35,10 +34,8 @@ func (c *Curve) ScalarMult(n *big.Int, P Point) (*Point, bool) {
 	var R0 Point
 	R1 := P
 
-	binary := fmt.Sprintf("%b", n)
-
-	for i := len(binary) - 1; i >= 0; i-- {
-		if string(binary[i]) == "1" {
+	for i := c.N.BitLen() - 1; i >= 0; i-- {
+		if n.Bit(i) == 0 {
 			R1, _ = c.AddPoints(R0, R1)
 			R0, _ = c.AddPoints(R0, R0)
 		} else {

@@ -26,7 +26,7 @@ type Point struct {
 
 // IsInfinity checks if a point is the point at infinity
 func (p *Point) IsInfinity() bool {
-	return p.X == nil && p.Y == nil || p.X.Sign() == 0 && p.Y.Sign() == 0
+	return p.X == nil && p.Y == nil
 }
 
 // ScalarMult computes the scalar multiplication of P by n defined by nP = P + P + ... + P where P + P is the point addition of P and P

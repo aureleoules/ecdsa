@@ -1,10 +1,10 @@
 package ecdsa
 
 import (
-	"github.com/stretchr/testify/assert"
-	"log"
 	"math/big"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var secp256k1 Curve
